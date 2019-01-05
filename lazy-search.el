@@ -6,8 +6,8 @@
 ;; Maintainer: Andy Stewart lazycat.manatee@gmail.com
 ;; Copyright (C) 2008, 2009, Andy Stewart, all rights reserved.
 ;; Created: 2008-12-23 23:05:10
-;; Version: 1.0
-;; Last-Updated: 2019-01-05 11:42:14
+;; Version: 1.1
+;; Last-Updated: 2019-01-05 14:10:25
 ;;           By: Andy Stewart
 ;; URL: http://www.emacswiki.org/emacs/download/lazy-search.el
 ;; Keywords: lazy-search
@@ -139,15 +139,14 @@
   (interactive)
   (lazy-search-mode 1))
 
-(defun lazy-search-init ()
-  "Lazy search initialization."
-  (if (thing-at-point 'symbol)
-      (lazy-search-mark-symbol-or-region)
-    (message "Please move cursor some thing, lazy-search can mark it")))
+(defun lazy-search-quit ()
+  "Lazy search quit."
+  (interactive)
+  (lazy-search-mode -1)
+  (message "Quit from lazy-search"))
 
 (defun lazy-search-abort ()
   "Handle abort with `lazy-search'."
-  (interactive)
   ;; Clean overlay from buffer.
   (lazy-search-highlight-current-clean)
   (lazy-search-highlight-background-clean)
@@ -160,29 +159,15 @@
   (setq lazy-search-object-offset 0)
   (setq lazy-search-mark-init-pos 0))
 
-(defun lazy-search-quit ()
-  "Lazy search quit."
-  (interactive)
-  (lazy-search-abort)
-  (lazy-search-mode -1)
-  (message "Quit from lazy-search"))
-
 (defun lazy-search-highlight-current-highlight (object-beg object-end)
   "Highlight current search object.
 `OBJECT-BEG' the begin position of search-object.
 `OBJECT-END' the end position of search-object."
   (save-excursion
-    ;; Clean current highlight overlay in buffer.
-    (lazy-search-highlight-current-clean)
-    ;; Remove overlay with face from `OBJECT-BEG' to `OBJECT-ENG'.
-    (remove-overlays object-beg object-end
-                     lazy-search-highlight-current-overlay 'lazy-search-highlight-current)
-    ;; Bind current highlight overlay in buffer.
-    (setq lazy-search-highlight-current-overlay
-          (lazy-search-highlight-bind-overlay
-           object-beg object-end
-           lazy-search-highlight-current-overlay
-           'lazy-search-highlight-current))))
+    (if lazy-search-highlight-current-overlay
+        (move-overlay lazy-search-highlight-current-overlay object-beg object-end)
+      (setq lazy-search-highlight-current-overlay (make-overlay object-beg object-end))
+      (overlay-put lazy-search-highlight-current-overlay 'face 'lazy-search-highlight-current))))
 
 (defun lazy-search-highlight-background-highlight (object)
   "Background highlight all match object.
@@ -300,18 +285,21 @@ Otherwise keep original point before search."
 (defun lazy-search-mark-symbol-or-region ()
   "Mark symbol."
   (interactive)
-  (save-excursion
-    (if (region-active-p)
-        (progn
+  (if (or (thing-at-point 'symbol)
+          (region-active-p))
+      (save-excursion
+        (if (region-active-p)
+            (progn
+              (lazy-search-mark
+               (point)
+               (region-beginning)
+               (region-end))
+              (setq mark-active nil))
           (lazy-search-mark
            (point)
-           (region-beginning)
-           (region-end))
-          (setq mark-active nil))
-      (lazy-search-mark
-       (point)
-       (beginning-of-thing 'symbol)
-       (end-of-thing 'symbol)))))
+           (beginning-of-thing 'symbol)
+           (end-of-thing 'symbol))))
+    (message "Please move cursor some thing, lazy-search can mark it")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Copy Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun lazy-search-copy (object-beg object-end)
@@ -495,9 +483,16 @@ Search backward if option `REVERSE' is `non-nil'."
   "Lazy Search"
   '()
   (if lazy-search-mode
-      (lazy-search-init)
-    (lazy-search-abort))
-  (set (make-local-variable 'buffer-read-only) lazy-search-mode))
+      (lazy-search-mode-enable)
+    (lazy-search-mode-disable)))
+
+(defun lazy-search-mode-enable ()
+  (lazy-search-mark-symbol-or-region)
+  (setq buffer-read-only t))
+
+(defun lazy-search-mode-disable ()
+  (lazy-search-abort)
+  (setq buffer-read-only nil))
 
 (defun lazy-search-set-key (key-alist &optional keymap key-prefix)
   "This function is to little type when define key binding.

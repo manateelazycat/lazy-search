@@ -6,8 +6,8 @@
 ;; Maintainer: Andy Stewart lazycat.manatee@gmail.com
 ;; Copyright (C) 2008, 2009, Andy Stewart, all rights reserved.
 ;; Created: 2008-12-23 23:05:10
-;; Version: 1.1
-;; Last-Updated: 2019-01-05 14:10:25
+;; Version: 1.2
+;; Last-Updated: 2019-01-05 14:28:28
 ;;           By: Andy Stewart
 ;; URL: http://www.emacswiki.org/emacs/download/lazy-search.el
 ;; Keywords: lazy-search
@@ -62,6 +62,7 @@
 ;;
 ;; 20019/01/05
 ;;      * Remove `one-key' dependences and unused code, and refactory code.
+;;      * Add `lazy-search-to-color-rg'
 ;;
 ;; 2009/01/22
 ;;      * Make function `lazy-search-menu' respond
@@ -476,6 +477,14 @@ Search backward if option `REVERSE' is `non-nil'."
         (message "Return search start position."))
     (message "No search start position.")))
 
+(defun lazy-search-to-color-rg ()
+  (interactive)
+  (if (featurep 'color-rg)
+      (let ((search-object lazy-search-object))
+        (lazy-search-quit)
+        (color-rg-search-input search-object default-directory))
+    (message "You need install color-rg.el from https://github.com/manateelazycat/color-rg first")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Customize Keystroke ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-minor-mode lazy-search-mode
   "Lazy search mode."
@@ -539,6 +548,7 @@ Search backward if option `REVERSE' is `non-nil'."
    ("t" . lazy-search-to-isearch)
    ("E" . lazy-search-edit-object)
    ("Y" . lazy-search-search-yank)
+   ("g" . lazy-search-to-color-rg)
    ;; Quit
    ("q" . lazy-search-quit)
    )

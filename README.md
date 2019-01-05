@@ -47,5 +47,6 @@ You can press below keys to jump in all matching symbols, or press q to quit laz
 | Y         | lazy-search-search-yank            | Search yank content                   |
 |           |                                    |                                       |
 | t         | lazy-search-to-isearch             | Toggle to isearch mode                |
+| g         | lazy-search-to-color-rg            | Search by color-rg.el                 |
 |           |                                    |                                       |
 | q         | lazy-search-quit                   | Quit lazy search mode                 |
